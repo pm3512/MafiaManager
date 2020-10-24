@@ -13,6 +13,11 @@ public class MainMenu {
 
     public static void main(String[] args) {
         frame = new JFrame("MafiaManager");
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+                | UnsupportedLookAndFeelException e) {
+        }
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         addComponentsToPane(frame.getContentPane());
         frame.getContentPane().setPreferredSize(new Dimension(1000, 560));
@@ -74,6 +79,7 @@ public class MainMenu {
                     players.add(new Player("Yurit", -200, 7));
                     players.add(new Player("Yuriiii", -200, 8));
                     players.add(new Player("Yurrri", -200, 9));
+                    players.add(new Player("Yri", -200, 10));
                     Game game = new Game((Integer) spinnerInnocents.getValue(), (Integer) spinnerMafias.getValue(), players);
                     game.setLocationRelativeTo(null);
                     game.setVisible(true);

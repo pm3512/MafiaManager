@@ -68,4 +68,8 @@ public class Player {
     public boolean isOnVote() {
         return isOnVote;
     }
+
+    public String getName() {
+        return name;
+    }
 }

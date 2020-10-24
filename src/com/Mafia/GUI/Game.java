@@ -1,15 +1,10 @@
 package com.Mafia.GUI;
 
-import com.Mafia.players.Player;
-import com.Mafia.players.Role;
-import com.Mafia.players.Table;
+import com.Mafia.players.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.util.ArrayList;
 
 public class Game extends JFrame {
@@ -17,40 +12,63 @@ public class Game extends JFrame {
     private static final int buttonWidth = 200;
     private static final int buttonHeight = 100;
     private GameTimer gameTimer = null;
+    private Notes notesFrame = null;
+    private String notesText = null;
 
     public Game(int num_innocents, int num_mafias, ArrayList<Player> players) {
         setTitle("MafiaManager");
         table = new Table(num_innocents, num_mafias, players);
-
         addComponentsToPane();
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                killChildFrames();
+            }
+        });
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                killChildFrames();
+            }
+        });
         getContentPane().setPreferredSize(new Dimension(900, 800));
+        getContentPane().setMinimumSize(new Dimension(830, 570));
         pack();
     }
 
-    private void addComponentsToPane() {
-        setLayout(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 0;
+    private void killChildFrames() {
+        if(gameTimer != null) {
+            gameTimer.dispose();
+        }
+        if(notesFrame != null) {
+            notesFrame.dispose();
+        }
+    }
+
+    private void setMenuConstraints(GridBagConstraints c) {
         c.weighty = 0;
         c.anchor = GridBagConstraints.NORTHWEST;
         c.weightx = 1.0;
         c.weighty = 0.5;
+    }
 
+    private void addQuitButton(GridBagConstraints c) {
+        c.gridx = 0;
+        c.gridy = 0;
         JMenuItem quit = new JMenuItem("Quit to Main Menu");
         quit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 MainMenu.main(null);
-                if(gameTimer != null) {
-                    gameTimer.dispose();
-                }
                 dispose();
             }
         });
         getContentPane().add(quit, c);
+    }
 
+    private void addTimerButton(GridBagConstraints c) {
         c.gridx = 1;
+        c.gridy = 0;
         JMenuItem timer = new JMenuItem("Set Timer");
         timer.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e) {
@@ -74,7 +92,6 @@ public class Game extends JFrame {
                             gameTimer = null;
                             timer.setEnabled(true);
                         }
-
                     });
                     gameTimer.setLocationRelativeTo(null);
                     gameTimer.setVisible(true);
@@ -83,11 +100,44 @@ public class Game extends JFrame {
             }
         });
         getContentPane().add(timer, c);
+    }
 
+    private void addNotesButton(GridBagConstraints c) {
         c.gridx = 2;
+        c.gridy = 0;
         JMenuItem notes = new JMenuItem("Notes");
+        notes.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                notesFrame = notesText == null ? new Notes(table.getPlayers()) : new Notes(notesText);
+                notesFrame.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosing(WindowEvent e) {
+                        notesText = notesFrame.getNotes();
+                        notes.setEnabled(true);
+                        notesFrame = null;
+                    }
+                });
+                notesFrame.setLocationRelativeTo(null);
+                notesFrame.setVisible(true);
+                notes.setEnabled(false);
+            }
+        });
         getContentPane().add(notes, c);
+    }
 
+    private void addEndGameButton(GridBagConstraints c) {
+        c.gridx = 3;
+        c.gridy = 0;
+        JMenuItem endGame = new JMenuItem("End Game");
+        endGame.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                clearAllVotes();
+            }
+        });
+        getContentPane().add(endGame, c);
+    }
+
+    private void addVotePanel(GridBagConstraints c) {
         c.weighty = 1;
         JPanel voteList = new JPanel();
         c.gridx = 1;
@@ -99,6 +149,28 @@ public class Game extends JFrame {
         JLabel voteLabel = new JLabel("<html><span style=\"font-family:Courier;font-size:16px;\"><b>On Vote: </b></span></html>");
         voteList.add(voteLabel);
         getContentPane().add(voteList, c);
+        JButton clearVote = new JButton("<html><span style=\"font-family:Courier;font-size:16px;\"><b>Clear Votes</b></span></html>");
+        c.gridx = 1;
+        c.gridy = 5;
+        c.gridwidth = 2;
+        clearVote.setPreferredSize(new Dimension(buttonWidth, buttonHeight));
+        clearVote.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                clearAllVotes();
+            }
+        });
+        getContentPane().add(clearVote, c);
+    }
+
+    private void addComponentsToPane() {
+        setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        setMenuConstraints(c);
+        addQuitButton(c);
+        addTimerButton(c);
+        addNotesButton(c);
+        addEndGameButton(c);
+        addVotePanel(c);
         addPlayerButtons(c);
     }
 
@@ -107,32 +179,26 @@ public class Game extends JFrame {
         c.anchor = GridBagConstraints.CENTER;
         c.gridwidth = 1;
         c.gridheight = 1;
-        String numberText = "";
-        String roleText = "";
-        String penaltiesText = "";
-        int[] posX = new int[] {
-            0, 0, 0, 0, 1, 2, 3, 3, 3, 3
-        };
-        int[] posY = new int[] {
-            5, 4, 3, 2, 1, 1, 2, 3, 4, 5
+        int[][] pos = new int[][] {
+            new int[]{0, 5}, new int[]{0, 4},
+            new int[]{0, 3}, new int[]{0, 2},
+            new int[]{1, 1}, new int[]{2, 1},
+            new int[]{3, 2}, new int[]{3, 3},
+            new int[]{3, 4}, new int[]{3, 5}
         };
         for(int i = 1; i < table.getNumPlayers() + 1; i++) {
             Player player = table.getPlayers().get(i - 1);
-            numberText = getNumberText(i);
-            roleText = getRoleText(player.getRole());
-            penaltiesText = getPenaltiesText(player.getPenalties());
-
             JButton playerButton = new JButton();
             playerButton.setLayout(new BorderLayout());
-            JLabel number = new JLabel(numberText);
-            JLabel role = new JLabel(roleText);
-            JLabel penalties = new JLabel(penaltiesText);
+            JLabel number = new JLabel(getNumberText(i));
+            JLabel role = new JLabel(getRoleText(player.getRole()));
+            JLabel penalties = new JLabel(getPenaltiesText(player.getPenalties()));
             playerButton.add(BorderLayout.NORTH, number);
             playerButton.add(BorderLayout.CENTER, role);
             playerButton.add(BorderLayout.SOUTH, penalties);
             playerButton.setPreferredSize(new Dimension(buttonWidth, buttonHeight));
-            c.gridx = posX[i - 1];
-            c.gridy = posY[i - 1];
+            c.gridx = pos[i - 1][0];
+            c.gridy = pos[i - 1][1];
             playerButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -142,85 +208,93 @@ public class Game extends JFrame {
             getContentPane().add(playerButton, c);
         }
     }
-
-    private JPopupMenu getMenu(Player player, JButton playerButton) {
-        JPopupMenu menu = new JPopupMenu("Menu");
-        JMenuItem addNote = new JMenuItem("Add Note");
-        addNote.addActionListener(new ActionListener(){
-            public void actionPerformed(ActionEvent e) {
-            }
-        });
-        menu.add(addNote);
-        if(!player.isAlive()) {
-            JMenuItem revive = new JMenuItem("Revive");
+    
+    private void addReviveItem(JPopupMenu menu, Player player, JButton playerButton) {
+        JMenuItem revive = new JMenuItem("Revive");
             revive.addActionListener(new ActionListener(){
                 public void actionPerformed(ActionEvent e) {
                     player.revive();
+                    playerButton.setContentAreaFilled(true);
+                    playerButton.setOpaque(false);
                     playerButton.setBackground(new JButton().getBackground());
                 }
             });
             menu.add(revive);
-        }
-        else {
-            JMenuItem kick = new JMenuItem("Kick");
+    }
+
+    private void addKickItem(JPopupMenu menu, Player player, JButton playerButton) {
+        JMenuItem kick = new JMenuItem("Kick");
             kick.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     player.kill();
-                    if(player.isOnVote()) {
-
-                    }
+                    playerButton.setContentAreaFilled(false);
+                    playerButton.setOpaque(true);
                     playerButton.setBackground(new Color(250, 164, 164));
-                    if(((JPanel)getContentPane().getComponent(3)).getComponents().length > 0) {
+                    if(player.isOnVote()) {
+                        int n = table.getVoteList().size();
+                        int cancelVoteIndex = 0;
+                        for(int i = 0; i < n; i++) {
+                            if(table.getVoteList().get(i).equals(player.getNumber())) {
+                                cancelVoteIndex = i;
+                                break;
+                            }
+                        }
+                        table.cancelVote(player.getNumber());
+                        ((JPanel)getContentPane().getComponent(4)).remove(cancelVoteIndex + 1);
+                        ((JPanel)getContentPane().getComponent(4)).revalidate();
+                        ((JPanel)getContentPane().getComponent(4)).repaint();
+                    }
+                    if(table.getVoteList().size() != 0) {
                         int clear = JOptionPane.showConfirmDialog(
                                 null, "Clear the vote list?", "", JOptionPane.YES_NO_OPTION);
                         if(clear == JOptionPane.YES_OPTION) {
-                            while(((JPanel)getContentPane().getComponent(3)).getComponents().length > 1) {
-                                ((JPanel)getContentPane().getComponent(3)).remove(1);
-                            }
-                            for(int i = 1; i <= table.getNumPlayers(); i++) {
-                                table.cancelVote(i);
-                            }
-                            ((JPanel)getContentPane().getComponent(3)).revalidate();
-                            ((JPanel)getContentPane().getComponent(3)).repaint();
+                            clearAllVotes();
                         }
                     }
                 }
             });
             menu.add(kick);
-            JMenuItem addPenalty = new JMenuItem("Add Penalty");
+    }
+
+    private void addPenaltyItem(JPopupMenu menu, Player player, JButton playerButton) {
+        JMenuItem addPenalty = new JMenuItem("Add Penalty");
             addPenalty.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
+                    System.out.print(getSize());
                     player.addPenalty();
                     ((JLabel) playerButton.getComponent(2)).setText(getPenaltiesText(player.getPenalties()));
                 }
             });
             menu.add(addPenalty);
-            if (player.getPenalties() > 0) {
-                JMenuItem deductPenalty = new JMenuItem("Deduct Penalty");
+    }
+
+    private void addDeductPenaltyItem(JPopupMenu menu, Player player, JButton playerButton) {
+        JMenuItem deductPenalty = new JMenuItem("Deduct Penalty");
                 deductPenalty.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         player.deductPenalty();
                         ((JLabel) playerButton.getComponent(2)).setText(getPenaltiesText(player.getPenalties()));
                     }
                 });
-                menu.add(deductPenalty);
-            }
-            if (!player.isOnVote()) {
-                JMenuItem putOnVote = new JMenuItem("Put on Vote");
+        menu.add(deductPenalty);
+    }
+
+    private void addPutOnVoteItem(JPopupMenu menu, Player player) {
+        JMenuItem putOnVote = new JMenuItem("Put on Vote");
                 putOnVote.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         table.putOnVote(player.getNumber());
                         JLabel numberLabel = new JLabel(getNumberText(player.getNumber()));
-                        ((JPanel)getContentPane().getComponent(3)).add(numberLabel);
-                        ((JPanel)getContentPane().getComponent(3)).revalidate();
-                        ((JPanel)getContentPane().getComponent(3)).repaint();
+                        ((JPanel)getContentPane().getComponent(4)).add(numberLabel);
+                        ((JPanel)getContentPane().getComponent(4)).revalidate();
+                        ((JPanel)getContentPane().getComponent(4)).repaint();
                     }
                 });
                 menu.add(putOnVote);
-            }
+    }
 
-            else {
-                JMenuItem cancelVote = new JMenuItem("Cancel Vote");
+    private void addCancelVoteItem(JPopupMenu menu, Player player) {
+        JMenuItem cancelVote = new JMenuItem("Cancel Vote");
                 cancelVote.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         int n = table.getVoteList().size();
@@ -232,20 +306,48 @@ public class Game extends JFrame {
                             }
                         }
                         table.cancelVote(player.getNumber());
-                        ((JPanel)getContentPane().getComponent(3)).remove(cancelVoteIndex + 1);
-                        ((JPanel)getContentPane().getComponent(3)).revalidate();
-                        ((JPanel)getContentPane().getComponent(3)).repaint();
+                        ((JPanel)getContentPane().getComponent(4)).remove(cancelVoteIndex + 1);
+                        ((JPanel)getContentPane().getComponent(4)).revalidate();
+                        ((JPanel)getContentPane().getComponent(4)).repaint();
                     }
                 });
                 menu.add(cancelVote);
+    }
+
+    private JPopupMenu getMenu(Player player, JButton playerButton) {
+        JPopupMenu menu = new JPopupMenu("Menu");
+        if(!player.isAlive()) {
+            addReviveItem(menu, player, playerButton);
+        }
+        else {
+            addKickItem(menu, player, playerButton);
+            addPenaltyItem(menu, player, playerButton);
+            if (player.getPenalties() > 0) {
+                addDeductPenaltyItem(menu, player, playerButton);
+            }
+            if (!player.isOnVote()) {
+                addPutOnVoteItem(menu, player);
+            }
+            else {
+                addCancelVoteItem(menu, player);
             }
         }
         return menu;
     }
 
+    private void clearAllVotes() {
+        while(((JPanel)getContentPane().getComponent(4)).getComponents().length > 1) {
+            ((JPanel)getContentPane().getComponent(4)).remove(1);
+        }
+        for(int i = 1; i <= table.getNumPlayers(); i++) {
+            table.cancelVote(i);
+        }
+        ((JPanel)getContentPane().getComponent(4)).revalidate();
+        ((JPanel)getContentPane().getComponent(4)).repaint();
+    }
+
     private String getNumberText(int number) {
-        return "<html><span style=\"font-family:Courier;font-size:16px;\"><b>Player </b></span>" +
-                "<span style=\"font-family:Courier;font-size:16px\"><b>" + Integer.toString(number) + "</b></html>";
+        return "<html><span style=\"font-family:Courier;font-size:16px;\"><b>Player " + Integer.toString(number) + "</b></span></html>";
     }
 
     private String getRoleText(Role role) {
@@ -272,6 +374,7 @@ public class Game extends JFrame {
             color = "red";
         }
         return "<html><span style=\"font-family:Courier;font-size:16px;\"><b>Penalties: </b></span>" +
-                "<span style=\"font-family:Courier;font-size:18px\"><b><font color='" + color +"'>" + Integer.toString(penalties) + "</font></b></html>";
+                "<span style=\"font-family:Courier;font-size:18px\"><b><font color='" + color +"'>" + 
+                Integer.toString(penalties) + "</font></b></html>";
     }
 }
