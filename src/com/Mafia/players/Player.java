@@ -1,6 +1,8 @@
 package com.Mafia.players;
 
-public class Player {
+import java.io.Serializable;
+
+public class Player implements Serializable {
     private Role role;
     private String name;
     private int rating;
@@ -16,6 +18,14 @@ public class Player {
         this.number = number;
     }
 
+    public Player(String name, int rating) {
+        this.name = name;
+        this.rating = rating;
+    }
+
+    public int getRating() {
+        return rating;
+    }
 
     public int getNumber() {
         return number;

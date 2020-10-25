@@ -17,18 +17,13 @@ public class Game extends JFrame {
 
     public Game(int num_innocents, int num_mafias, ArrayList<Player> players) {
         setTitle("MafiaManager");
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         table = new Table(num_innocents, num_mafias, players);
         addComponentsToPane();
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
-                killChildFrames();
-            }
-        });
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                killChildFrames();
+                disposeChildFrames();
             }
         });
         getContentPane().setPreferredSize(new Dimension(900, 800));
@@ -36,20 +31,13 @@ public class Game extends JFrame {
         pack();
     }
 
-    private void killChildFrames() {
+    private void disposeChildFrames() {
         if(gameTimer != null) {
             gameTimer.dispose();
         }
         if(notesFrame != null) {
             notesFrame.dispose();
         }
-    }
-
-    private void setMenuConstraints(GridBagConstraints c) {
-        c.weighty = 0;
-        c.anchor = GridBagConstraints.NORTHWEST;
-        c.weightx = 1.0;
-        c.weighty = 0.5;
     }
 
     private void addQuitButton(GridBagConstraints c) {
@@ -131,7 +119,7 @@ public class Game extends JFrame {
         JMenuItem endGame = new JMenuItem("End Game");
         endGame.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                clearAllVotes();
+                endGame();
             }
         });
         getContentPane().add(endGame, c);
@@ -165,7 +153,9 @@ public class Game extends JFrame {
     private void addComponentsToPane() {
         setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
-        setMenuConstraints(c);
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.weightx = 1.0;
+        c.weighty = 0.5;
         addQuitButton(c);
         addTimerButton(c);
         addNotesButton(c);
@@ -213,7 +203,7 @@ public class Game extends JFrame {
         JMenuItem revive = new JMenuItem("Revive");
             revive.addActionListener(new ActionListener(){
                 public void actionPerformed(ActionEvent e) {
-                    player.revive();
+                    table.revive(player);
                     playerButton.setContentAreaFilled(true);
                     playerButton.setOpaque(false);
                     playerButton.setBackground(new JButton().getBackground());
@@ -223,46 +213,78 @@ public class Game extends JFrame {
     }
 
     private void addKickItem(JPopupMenu menu, Player player, JButton playerButton) {
-        JMenuItem kick = new JMenuItem("Kick");
-            kick.addActionListener(new ActionListener() {
+        JMenuItem kickItem = new JMenuItem("Kick");
+            kickItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    player.kill();
-                    playerButton.setContentAreaFilled(false);
-                    playerButton.setOpaque(true);
-                    playerButton.setBackground(new Color(250, 164, 164));
-                    if(player.isOnVote()) {
-                        int n = table.getVoteList().size();
-                        int cancelVoteIndex = 0;
-                        for(int i = 0; i < n; i++) {
-                            if(table.getVoteList().get(i).equals(player.getNumber())) {
-                                cancelVoteIndex = i;
-                                break;
-                            }
-                        }
-                        table.cancelVote(player.getNumber());
-                        ((JPanel)getContentPane().getComponent(4)).remove(cancelVoteIndex + 1);
-                        ((JPanel)getContentPane().getComponent(4)).revalidate();
-                        ((JPanel)getContentPane().getComponent(4)).repaint();
-                    }
-                    if(table.getVoteList().size() != 0) {
-                        int clear = JOptionPane.showConfirmDialog(
-                                null, "Clear the vote list?", "", JOptionPane.YES_NO_OPTION);
-                        if(clear == JOptionPane.YES_OPTION) {
-                            clearAllVotes();
-                        }
-                    }
+                    kick(player, playerButton, false);
                 }
             });
-            menu.add(kick);
+            menu.add(kickItem);
+    }
+
+    private void kick(Player player, JButton playerButton, boolean byPenalties) {
+        table.kill(player);
+        playerButton.setContentAreaFilled(false);
+        playerButton.setOpaque(true);
+        playerButton.setBackground(new Color(250, 164, 164));
+        if(player.isOnVote()) {
+            int n = table.getVoteList().size();
+            int cancelVoteIndex = 0;
+            for(int i = 0; i < n; i++) {
+                if(table.getVoteList().get(i).equals(player.getNumber())) {
+                    cancelVoteIndex = i;
+                    break;
+                }
+            }
+            table.cancelVote(player.getNumber());
+            ((JPanel)getContentPane().getComponent(4)).remove(cancelVoteIndex + 1);
+            ((JPanel)getContentPane().getComponent(4)).revalidate();
+            ((JPanel)getContentPane().getComponent(4)).repaint();
+        }
+        switch(table.getResult()) {
+            case(-1): {
+                    int endOption = JOptionPane.showConfirmDialog(
+                            null, "The mafia won. End the game?", "", JOptionPane.YES_NO_OPTION);
+                    if(endOption == JOptionPane.YES_OPTION) {
+                        endGame();
+                    }
+                    break;
+            } 
+            case(1): {
+                int endOption = JOptionPane.showConfirmDialog(
+                            null, "The town won. End the game?", "", JOptionPane.YES_NO_OPTION);
+                    if(endOption == JOptionPane.YES_OPTION) {
+                        endGame();
+                    }
+            }
+        }
+        if(byPenalties) {
+            return;
+        }
+        if(table.getVoteList().size() != 0) {
+            int clearOption = JOptionPane.showConfirmDialog(
+                    null, "Clear the vote list?", "", JOptionPane.YES_NO_OPTION);
+            if(clearOption == JOptionPane.YES_OPTION) {
+                clearAllVotes();
+            }
+        }
     }
 
     private void addPenaltyItem(JPopupMenu menu, Player player, JButton playerButton) {
         JMenuItem addPenalty = new JMenuItem("Add Penalty");
             addPenalty.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    System.out.print(getSize());
                     player.addPenalty();
                     ((JLabel) playerButton.getComponent(2)).setText(getPenaltiesText(player.getPenalties()));
+                    if(player.getPenalties() == Table.penaltiesForMute) {
+                        JOptionPane.showMessageDialog(null, "Player " + player.getNumber() + " should be muted next round");
+                    }
+                    else if(player.getPenalties() == Table.penaltiesForKick) {
+                        int kickOption = JOptionPane.showConfirmDialog(null, "Kick player " + player.getNumber() + " from the table?", "", JOptionPane.YES_NO_OPTION);
+                        if(kickOption == JOptionPane.YES_OPTION) {
+                            kick(player, playerButton, true);
+                        }
+                    }
                 }
             });
             menu.add(addPenalty);
@@ -376,5 +398,9 @@ public class Game extends JFrame {
         return "<html><span style=\"font-family:Courier;font-size:16px;\"><b>Penalties: </b></span>" +
                 "<span style=\"font-family:Courier;font-size:18px\"><b><font color='" + color +"'>" + 
                 Integer.toString(penalties) + "</font></b></html>";
+    }
+
+    private void endGame() {
+
     }
 }

@@ -32,6 +32,40 @@ public class Table {
         assignRoles();
     }
 
+    public void kill(Player player) {
+        player.kill();
+        switch(player.getRole()) {
+            case INNOCENT:
+                numInnocents--;
+                break;
+            case SHERIFF:
+                sheriffAlive = false;
+                break;
+            case MAFIA:
+                numMafias--;
+                break;
+            case DON:
+                donAlive = false;
+        }
+    }
+
+    public void revive(Player player) {
+        player.revive();
+        switch(player.getRole()) {
+            case INNOCENT:
+                numInnocents++;
+                break;
+            case SHERIFF:
+                sheriffAlive = true;
+                break;
+            case MAFIA:
+                numMafias++;
+                break;
+            case DON:
+                donAlive = true;
+        }
+    }
+
     public void putOnVote(int i) {
         onVote.add(i);
         players.get(i - 1).vote();
@@ -75,7 +109,7 @@ public class Table {
         if(numMafias == 0 && !donAlive) {
             return 1;
         }
-        if(numMafias + (donAlive ? 1 : 0) > numInnocents + (sheriffAlive ? 1 : 0)) {
+        if(numMafias + (donAlive ? 1 : 0) >= numInnocents + (sheriffAlive ? 1 : 0)) {
             return -1;
         }
         return 0;

@@ -1,23 +1,31 @@
 package com.Mafia.GUI;
 
 import com.Mafia.players.Player;
+import com.Mafia.players.PlayersDB;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class MainMenu {
     private static JFrame frame;
 
     public static void main(String[] args) {
         frame = new JFrame("MafiaManager");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
-                | UnsupportedLookAndFeelException e) {
-        }
+                | UnsupportedLookAndFeelException e) {}
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         addComponentsToPane(frame.getContentPane());
         frame.getContentPane().setPreferredSize(new Dimension(1000, 560));
@@ -31,7 +39,7 @@ public class MainMenu {
         pane.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         JLabel label1 = new JLabel("Welcome to MafiaManager!");
-        Font font = new Font("Courier", Font.BOLD,18);
+        Font font = new Font("Courier", Font.BOLD, 18);
 
         label1.setFont(font);
         c.ipady = 300;
@@ -48,12 +56,12 @@ public class MainMenu {
         c.weighty = 1;
         c.gridwidth = 1;
 
-        JButton button1 = new JButton("Create a new game");
+        JButton buttonGame = new JButton("Create a new game");
         c.gridx = 0;
         c.gridy = 1;
-        pane.add(button1, c);
+        pane.add(buttonGame, c);
 
-        button1.addActionListener(new ActionListener() {
+        buttonGame.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 SpinnerModel model = new SpinnerNumberModel(6, 0, 6, 1);
@@ -66,9 +74,10 @@ public class MainMenu {
                 pane.add(spinnerInnocents);
                 pane.add(new JLabel("Mafiosi (without don): "));
                 pane.add(spinnerMafias);
-                int result = JOptionPane.showConfirmDialog(
-                        frame, pane, "Configure the game", JOptionPane.OK_CANCEL_OPTION);
+                int result = JOptionPane.showConfirmDialog(frame, pane, "Configure the game",
+                        JOptionPane.OK_CANCEL_OPTION);
                 if (result == JOptionPane.OK_OPTION) {
+
                     ArrayList<Player> players = new ArrayList<Player>();
                     players.add(new Player("Yuri", -200, 1));
                     players.add(new Player("IIurie", -200, 2));
@@ -80,18 +89,30 @@ public class MainMenu {
                     players.add(new Player("Yuriiii", -200, 8));
                     players.add(new Player("Yurrri", -200, 9));
                     players.add(new Player("Yri", -200, 10));
-                    Game game = new Game((Integer) spinnerInnocents.getValue(), (Integer) spinnerMafias.getValue(), players);
+                    Game game = new Game((Integer) spinnerInnocents.getValue(), (Integer) spinnerMafias.getValue(),
+                            players);
                     game.setLocationRelativeTo(null);
                     game.setVisible(true);
                     frame.dispose();
+
                 }
             }
         });
 
-        JButton button2 = new JButton("View the Leaderboard");
+        JButton buttonLeaderboard = new JButton("View and change the Leaderboard");
         c.gridx = 2;
         c.gridy = 1;
-        pane.add(button2, c);
+        pane.add(buttonLeaderboard, c);
+
+        buttonLeaderboard.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Leaderboard leaderboard = new Leaderboard(new PlayersDB());
+                leaderboard.setLocationRelativeTo(null);
+                leaderboard.setVisible(true);
+                frame.dispose();
+            }
+        });
 
         c.ipady = 0;
         c.ipadx = 0;
