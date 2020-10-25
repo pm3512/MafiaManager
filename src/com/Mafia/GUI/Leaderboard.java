@@ -1,7 +1,6 @@
 package com.Mafia.GUI;
 
 import java.awt.event.*;
-import java.util.ArrayList;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -72,7 +71,7 @@ public class Leaderboard extends JFrame {
     }
 
     private void addEntryButton(GridBagConstraints c) {
-        JMenuItem entry = new JMenuItem("Add new entry");
+        JMenuItem entry = new JMenuItem("Add New Entry");
         entry.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -131,8 +130,7 @@ public class Leaderboard extends JFrame {
         pane.add(name);
         pane.add(new JLabel("Rating: "));
         pane.add(rating);
-        int result = JOptionPane.showConfirmDialog(null, pane, "Add a new player",
-                JOptionPane.OK_CANCEL_OPTION);
+        int result = JOptionPane.showConfirmDialog(null, pane, "Add a new player", JOptionPane.OK_CANCEL_OPTION);
         if (result == JOptionPane.OK_OPTION) {
             db.addPlayer(new Player(name.getText(), (Integer) rating.getValue()));
             getContentPane().remove(2);

@@ -9,6 +9,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JOptionPane;
 
 public class PlayersDB implements Serializable {
@@ -89,5 +90,22 @@ public class PlayersDB implements Serializable {
                 JOptionPane.showMessageDialog(null, "Could not find or create the leaderboard");
             }
         }
+    }
+
+    public DefaultListModel<String> getNamesDLM() {
+        DefaultListModel<String> names = new DefaultListModel<>();
+        for(Player player : players) {
+            names.add(names.size(), player.getName());
+        }
+        return names;
+    }
+
+    public Player getPlayer(String name) {
+        for(Player player : players) {
+            if(player.getName().equals(name)) {
+                return new Player(player);
+            }
+        }
+        return null;
     }
 }

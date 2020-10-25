@@ -23,7 +23,11 @@ public class Player implements Serializable {
         this.rating = rating;
     }
 
-    public int getRating() {
+    public Player(Player player) {
+        this(player.name, player.rating);
+	}
+
+	public int getRating() {
         return rating;
     }
 
@@ -47,8 +51,17 @@ public class Player implements Serializable {
         this.role = role;
     }
 
-    public Boolean equals(Player player) {
-        return this.name.equals(player.name);
+    @Override
+    public boolean equals(Object obj) {
+        if(!(obj instanceof Player)) {
+            return false;
+        }
+        return this.name.equals(((Player) obj).name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 
     public Role getRole() {
@@ -81,5 +94,9 @@ public class Player implements Serializable {
 
     public String getName() {
         return name;
+    }
+
+    public void setNumber(int number) {
+        this.number = number;
     }
 }

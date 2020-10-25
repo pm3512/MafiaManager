@@ -396,7 +396,7 @@ public class Game extends JFrame {
             color = "red";
         }
         return "<html><span style=\"font-family:Courier;font-size:16px;\"><b>Penalties: </b></span>" +
-                "<span style=\"font-family:Courier;font-size:18px\"><b><font color='" + color +"'>" + 
+                "<span style=\"font-family:Courier;font-size:16px\"><b><font color='" + color +"'>" + 
                 Integer.toString(penalties) + "</font></b></html>";
     }
 
