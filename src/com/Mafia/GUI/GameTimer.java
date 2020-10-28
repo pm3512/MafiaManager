@@ -9,7 +9,7 @@ import java.util.TimerTask;
 
 public class GameTimer extends JFrame {
     private int time;
-    private int timeInit;
+    private int timeInit; //initial time to return to when reset
     private Timer t;
     private boolean timerPaused = false;
     private static final int timeWarningThreshold = 10;
@@ -20,6 +20,7 @@ public class GameTimer extends JFrame {
         getContentPane().setPreferredSize(new Dimension(400, 100));
         setResizable(false);
         setTitle("Timer");
+        //show timer and buttons on window
         addComponentsToPane();
         pack();
     }
@@ -27,8 +28,8 @@ public class GameTimer extends JFrame {
     private void addComponentsToPane() {
         getContentPane().setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
+        //label to display the timer
         JLabel label = new JLabel(timeString());
-
         c.ipady = 30;
         c.weighty = 0;
         c.gridx = 0;
@@ -37,6 +38,7 @@ public class GameTimer extends JFrame {
         c.anchor = GridBagConstraints.PAGE_START;
 
         getContentPane().add(label, c);
+        //pause/start button
         c.ipady = 2;
         c.ipadx = 20;
         c.weightx = 0.33;
@@ -59,6 +61,7 @@ public class GameTimer extends JFrame {
         c.gridx = 0;
         c.gridy = 1;
         getContentPane().add(pauseStart, c);
+        //button to reset the timer
         JButton reset = new JButton("Reset");
         reset.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e) {
@@ -74,6 +77,7 @@ public class GameTimer extends JFrame {
         start();
     }
 
+    //start timer countdown
     private void start() {
         t = new Timer();
         t.scheduleAtFixedRate(new TimerTask() {
@@ -90,10 +94,11 @@ public class GameTimer extends JFrame {
         }, 0, 1000);
     }
 
+    //get formatted time string
     private String timeString() {
         int mins = time / 60;
         String secsString = time % 60 > 9 ? Integer.toString(time % 60) :( "0" + Integer.toString(time % 60));
-        if(time < timeWarningThreshold) {
+        if(time <= timeWarningThreshold) {
             return "<html><span style=\"font-family:Courier;font-size:16px;\"><b><font color='red'>"
                     + Integer.toString(mins) + ":" + secsString + "</font></b></span></html>";
         }

@@ -19,6 +19,7 @@ public class PlayersDB implements Serializable {
         load();
     }
 
+    //if possible, add a player to the database. Otherwise, warning are displayed and a player is not added
     public void addPlayer(Player player) {
         if(player.getName().isEmpty()) {
             JOptionPane.showMessageDialog(null, "Please enter a non-empty name", "", JOptionPane.WARNING_MESSAGE);
@@ -35,6 +36,7 @@ public class PlayersDB implements Serializable {
         save();
     }
 
+    //binary search to find the position of a new player on the leaderboard
     private int getRanking(int rating, int l, int r) {
         if(l > r) {
             return l;
@@ -49,6 +51,7 @@ public class PlayersDB implements Serializable {
         return getRanking(rating, m + 1, r);
     }
 
+    //remove player from the database
     public void deletePlayer(Player player) {
         players.remove(player);
         save();
@@ -58,6 +61,7 @@ public class PlayersDB implements Serializable {
         return new ArrayList<Player>(players);
     }
 
+    //get the leaderboard from the leaderboard.out file if possible
     private void load() {
         ObjectInputStream objectInputStream;
         try {
@@ -76,6 +80,7 @@ public class PlayersDB implements Serializable {
         }
     }
 
+    //save the leaderboard to leaderboard.out if possible
     private void save() {
         ObjectOutputStream objectOutputStream;
         try {
@@ -92,6 +97,7 @@ public class PlayersDB implements Serializable {
         }
     }
 
+    //get player names for selection during game comfiguration
     public DefaultListModel<String> getNamesDLM() {
         DefaultListModel<String> names = new DefaultListModel<>();
         for(Player player : players) {
@@ -100,12 +106,22 @@ public class PlayersDB implements Serializable {
         return names;
     }
 
+    //get reference to the player with a given name
     public Player getPlayer(String name) {
         for(Player player : players) {
             if(player.getName().equals(name)) {
-                return new Player(player);
+                return player;
             }
         }
         return null;
+    }
+
+    public void addRating(String name, int rating) {
+        Player player = getPlayer(name);
+        Player playerCopy = new Player(player);
+        playerCopy.addRating(rating);
+        deletePlayer(player);
+        addPlayer(playerCopy);
+        save();
     }
 }

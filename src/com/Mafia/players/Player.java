@@ -12,6 +12,7 @@ public class Player implements Serializable {
     private boolean isAlive = true;
     private boolean isOnVote = false;
 
+    //different consutructors to create players in the game and on the leaderboard
     public Player(String name, int rating, int number) {
         this.name = name;
         this.rating = rating;
@@ -25,10 +26,15 @@ public class Player implements Serializable {
 
     public Player(Player player) {
         this(player.name, player.rating);
-	}
-
+    }
+    
+    // getters and setters
 	public int getRating() {
         return rating;
+    }
+
+    public void addRating(int rating) {
+        this.rating += rating;
     }
 
     public int getNumber() {
@@ -49,19 +55,6 @@ public class Player implements Serializable {
 
     public void setRole(Role role) {
         this.role = role;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if(!(obj instanceof Player)) {
-            return false;
-        }
-        return this.name.equals(((Player) obj).name);
-    }
-
-    @Override
-    public int hashCode() {
-        return name.hashCode();
     }
 
     public Role getRole() {
@@ -98,5 +91,19 @@ public class Player implements Serializable {
 
     public void setNumber(int number) {
         this.number = number;
+    }
+
+    //comparison for two players
+    @Override
+    public boolean equals(Object obj) {
+        if(!(obj instanceof Player)) {
+            return false;
+        }
+        return this.name.equals(((Player) obj).name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 }

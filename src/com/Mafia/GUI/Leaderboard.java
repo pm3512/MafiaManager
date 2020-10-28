@@ -23,6 +23,7 @@ public class Leaderboard extends JFrame {
 
     public Leaderboard(PlayersDB db) {
         setLayout(new GridBagLayout());
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         getContentPane().setPreferredSize(new Dimension(550, 600));
         setResizable(false);
         setTitle("Leaderboard");
@@ -122,7 +123,7 @@ public class Leaderboard extends JFrame {
 
     private void newEntry() {
         JTextField name = new JTextField(30);
-        SpinnerModel model = new SpinnerNumberModel(1200, 0, 3000, 50);
+        SpinnerModel model = new SpinnerNumberModel();
         JSpinner rating = new JSpinner(model);
 
         JPanel pane = new JPanel(new GridLayout(2, 2));
