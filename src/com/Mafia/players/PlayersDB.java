@@ -61,15 +61,15 @@ public class PlayersDB implements Serializable {
         return new ArrayList<Player>(players);
     }
 
-    //get the leaderboard from the leaderboard.out file if possible
+    //get the leaderboard from the .leaderboard file if possible
     private void load() {
         ObjectInputStream objectInputStream;
         try {
-            objectInputStream = new ObjectInputStream(new FileInputStream("leaderboard.out"));
+            objectInputStream = new ObjectInputStream(new FileInputStream(".leaderboard"));
             players = ((PlayersDB) objectInputStream.readObject()).players;
             objectInputStream.close();
         } catch (IOException e1) {
-            File leaderboardFile = new File("leaderboard.out");
+            File leaderboardFile = new File(".leaderboard");
             try {
                 leaderboardFile.createNewFile();
             } catch (IOException e) {
@@ -80,15 +80,15 @@ public class PlayersDB implements Serializable {
         }
     }
 
-    //save the leaderboard to leaderboard.out if possible
+    //save the leaderboard to .leaderboard if possible
     private void save() {
         ObjectOutputStream objectOutputStream;
         try {
-            objectOutputStream = new ObjectOutputStream(new FileOutputStream("leaderboard.out"));
+            objectOutputStream = new ObjectOutputStream(new FileOutputStream(".leaderboard"));
             objectOutputStream.writeObject(this);
             objectOutputStream.close();
         } catch (IOException e1) {
-            File leaderboardFile = new File("leaderboard.out");
+            File leaderboardFile = new File(".leaderboard");
             try {
                 leaderboardFile.createNewFile();
             } catch (IOException e) {
